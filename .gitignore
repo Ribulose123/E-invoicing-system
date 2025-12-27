@@ -1,0 +1,11 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/e-invocie/bin/Debug/net8.0
+/e-invocie/obj
+/E-invocing.Domin/bin/Debug/net8.0
+/E-invocing.Domin/obj
+/E-invocing.Persistence/bin/Debug/net8.0
+/E-invocing.Persistence/obj
