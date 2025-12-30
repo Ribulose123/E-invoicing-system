@@ -4,6 +4,7 @@ using E_invocing.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace E_invocing.Persistence.Migrations
 {
     [DbContext(typeof(E_invocingDbContext))]
-    partial class E_invocingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251230023607_UploadEncapsulation")]
+    partial class UploadEncapsulation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -52,7 +55,19 @@ namespace E_invocing.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("BaseAmount")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BaseCurrency")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("InvoiceNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Status")
                         .HasColumnType("int");
 
                     b.Property<int>("UploadBatchId")
@@ -60,18 +75,6 @@ namespace E_invocing.Persistence.Migrations
 
                     b.Property<DateTime>("UplodadDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("baseAmount")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("baseCurrency")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("invoiceNumber")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("status")
-                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -92,10 +95,10 @@ namespace E_invocing.Persistence.Migrations
                     b.Property<int>("InvoiceId")
                         .HasColumnType("int");
 
-                    b.Property<int>("quantity")
+                    b.Property<int>("Quantity")
                         .HasColumnType("int");
 
-                    b.Property<int>("unitPrice")
+                    b.Property<int>("UnitPrice")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -117,18 +120,6 @@ namespace E_invocing.Persistence.Migrations
                     b.Property<DateTime>("UploadedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("failedRecords")
-                        .HasColumnType("int");
-
-                    b.Property<int>("status")
-                        .HasColumnType("int");
-
-                    b.Property<int>("successfulRecords")
-                        .HasColumnType("int");
-
-                    b.Property<int>("totalRecords")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.ToTable("UploadBatches");
@@ -142,19 +133,19 @@ namespace E_invocing.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("UploadBatchId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("createdAt")
+                    b.Property<DateTime>("CreateAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("errorMessage")
+                    b.Property<string>("ErrorMessage")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("fieldName")
+                    b.Property<string>("FieldName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("rowNumber")
+                    b.Property<int>("RowNumber")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UploadBatchId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");

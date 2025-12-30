@@ -4,6 +4,7 @@ using E_invocing.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace E_invocing.Persistence.Migrations
 {
     [DbContext(typeof(E_invocingDbContext))]
-    partial class E_invocingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251230033438_ValidationErrorEncapsulation")]
+    partial class ValidationErrorEncapsulation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -92,10 +95,10 @@ namespace E_invocing.Persistence.Migrations
                     b.Property<int>("InvoiceId")
                         .HasColumnType("int");
 
-                    b.Property<int>("quantity")
+                    b.Property<int>("Quantity")
                         .HasColumnType("int");
 
-                    b.Property<int>("unitPrice")
+                    b.Property<int>("UnitPrice")
                         .HasColumnType("int");
 
                     b.HasKey("Id");

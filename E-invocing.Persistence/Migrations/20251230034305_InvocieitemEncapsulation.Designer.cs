@@ -4,6 +4,7 @@ using E_invocing.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace E_invocing.Persistence.Migrations
 {
     [DbContext(typeof(E_invocingDbContext))]
-    partial class E_invocingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251230034305_InvocieitemEncapsulation")]
+    partial class InvocieitemEncapsulation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

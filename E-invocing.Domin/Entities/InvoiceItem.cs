@@ -2,10 +2,19 @@
 {
     public class InvoiceItem
     {
-        public int Id { get; set; }
-        public int InvoiceId { get; set; }
-        public string? Description { get; set; }
-        public int UnitPrice { get; set; }
-        public int Quantity { get; set; }
+        public int Id { get; private set; }
+        public int InvoiceId { get; private set; }
+        public string? Description { get; private set; }
+        private int unitPrice;
+        private int quantity;
+
+        public int UnitPrice => unitPrice;
+        public int Quantity => quantity;
+        protected InvoiceItem() { }
+        public InvoiceItem(int invoiceId, string? description)
+        {
+            InvoiceId = invoiceId;
+            Description = description;
+        }
     }
 }
