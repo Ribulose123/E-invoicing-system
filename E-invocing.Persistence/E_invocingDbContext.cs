@@ -33,7 +33,6 @@ namespace E_invocing.Persistence
 
             modelBuilder.Entity<ValidationError>(entity =>
             {
-                entity.Property<int>("rowNumber");
                 entity.Property<string?>("fieldName");
                 entity.Property<string?>("errorMessage");
                 entity.Property<DateTime>("createdAt");
@@ -50,6 +49,6 @@ namespace E_invocing.Persistence
         public DbSet<Customer> Customers { get; set; }
         public DbSet <InvoiceItem> InvoicesItems { get; set; }
         public DbSet <UploadBatch> UploadBatches { get; set; }
-        public DbSet<ValidationError> validationErrors { get; set; }
+        public DbSet<ValidationError> ValidationErrors { get; set; }
     }
 }

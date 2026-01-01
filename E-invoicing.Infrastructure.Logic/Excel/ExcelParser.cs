@@ -1,25 +1,21 @@
 ﻿using ClosedXML.Excel;
-using e_invocie.Interface;
 using E_invocing.Domin.DTO;
-using Microsoft.AspNetCore.Http;
+using E_invocing.Domin.InterFaces;
 
 namespace E_invoicing.Infrastructure.Logic.Excel
 {
     public class ExcelParser : IExcelParser
     {
-        public List<InvoiceUploadDto> ParseInvoice(IFormFile file)
+        public List<InvoiceUploadDto> ParseInvoice(Stream fileStream)
         {
             var invoices = new List<InvoiceUploadDto>();
 
-            using var stream = file.OpenReadStream();
-            using var workbook = new XLWorkbook(stream);
+            using var workbook = new XLWorkbook(fileStream);
             var worksheet = workbook.Worksheet(1);
 
-            
             var headerRow = worksheet.Row(1);
             var headers = headerRow.CellsUsed().Select(c => c.GetString().Trim()).ToList();
 
-            
             var dataRows = worksheet.RowsUsed().Skip(1);
 
             foreach (var row in dataRows)
@@ -30,7 +26,6 @@ namespace E_invoicing.Infrastructure.Logic.Excel
                     rowDict[headers[i]] = row.Cell(i + 1).GetString().Trim();
                 }
 
-                
                 var invoice = new InvoiceUploadDto();
 
                 foreach (var kvp in rowDict)
@@ -44,7 +39,7 @@ namespace E_invoicing.Infrastructure.Logic.Excel
                             invoice.Currency = kvp.Value;
                             break;
                         case "Amount":
-                            invoice.Amount = decimal.TryParse(kvp.Value, out var val) ? val : 0;
+                            invoice.Amount = kvp.Value;
                             break;
                         case "CustomerEmail":
                             invoice.CustomerEmail = kvp.Value;

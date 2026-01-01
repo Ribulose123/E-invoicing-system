@@ -12,9 +12,9 @@
     <PackageReference Include="ClosedXML" Version="0.102.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\e-invocie\e-invocie.csproj" />
-    <ProjectReference Include="..\E-invocing.Domin\E-invocing.Domin.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\E-invocing.Domin\E-invocing.Domin.csproj" />
+	</ItemGroup>
+
 
 </Project>

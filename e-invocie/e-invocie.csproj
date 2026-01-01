@@ -22,7 +22,8 @@
   <ItemGroup>
     <ProjectReference Include="..\E-invocing.Domin\E-invocing.Domin.csproj" />
     <ProjectReference Include="..\E-invocing.Persistence\E-invocing.Persistence.csproj" />
-	  <ProjectReference Include="..\E-invocing.Infrastructure.Logic\E-invoicing.Infrastructure.Logic.csproj"/>
+	  <ProjectReference Include="..\E-invoicing.Infrastructure.Logic\E-invoicing.Infrastructure.Logic.csproj" />
+
 
 
   </ItemGroup>
