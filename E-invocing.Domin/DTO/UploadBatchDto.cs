@@ -1,11 +1,8 @@
-﻿using E_invocing.Domin.Enum;
-
-namespace E_invocing.Domin.DTO
+﻿namespace E_invocing.Domin.DTO
 {
-   public class UploadBatchDto
+    public class UploadBatchRequestDto
     {
-        public string? UploadBy { get; set; }
-        public UploadStatus Status { get; set; } = UploadStatus.Processing;
-        public DateTime UploadedAt { get; set; }
+        public string UploadBy { get; set; } = string.Empty;
+        public List<InvoiceUploadDto> Invoices { get; set; } = new();
     }
 }

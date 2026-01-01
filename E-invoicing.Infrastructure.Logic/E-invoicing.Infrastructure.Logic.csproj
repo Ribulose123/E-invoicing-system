@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>E_invoicing.Infrastructure.Logic</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.102.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\e-invocie\e-invocie.csproj" />
+    <ProjectReference Include="..\E-invocing.Domin\E-invocing.Domin.csproj" />
+  </ItemGroup>
+
+</Project>

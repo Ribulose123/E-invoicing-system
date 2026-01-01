@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.36623.8
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11217.181 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "e-invocie", "e-invocie\e-invocie.csproj", "{F112D13B-FD6F-4006-8591-D2A0CD1FB01C}"
 EndProject
@@ -14,6 +14,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "E-invocing.Domin", "E-invocing.Domin\E-invocing.Domin.csproj", "{F1D55EE5-20CB-443C-812C-09EE1D0E6E5F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "E-invocing.Persistence", "E-invocing.Persistence\E-invocing.Persistence.csproj", "{9DEB4477-EAAB-4611-8ED1-8D511FDADE7D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "E-invoicing.Infrastructure.Logic", "E-invoicing.Infrastructure.Logic\E-invoicing.Infrastructure.Logic.csproj", "{B191C7D6-63F9-4BC8-9A8E-ACC59868F127}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{9DEB4477-EAAB-4611-8ED1-8D511FDADE7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9DEB4477-EAAB-4611-8ED1-8D511FDADE7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9DEB4477-EAAB-4611-8ED1-8D511FDADE7D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B191C7D6-63F9-4BC8-9A8E-ACC59868F127}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B191C7D6-63F9-4BC8-9A8E-ACC59868F127}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B191C7D6-63F9-4BC8-9A8E-ACC59868F127}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B191C7D6-63F9-4BC8-9A8E-ACC59868F127}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -41,6 +47,7 @@ Global
 		{F112D13B-FD6F-4006-8591-D2A0CD1FB01C} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{F1D55EE5-20CB-443C-812C-09EE1D0E6E5F} = {F41F03C6-0E2A-441E-BF01-F38E122516BC}
 		{9DEB4477-EAAB-4611-8ED1-8D511FDADE7D} = {3CDB93E0-FB43-42E2-A9E3-F217F323FD80}
+		{B191C7D6-63F9-4BC8-9A8E-ACC59868F127} = {3CDB93E0-FB43-42E2-A9E3-F217F323FD80}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {967870A9-0863-4658-86C8-8C4200EFBB3E}
