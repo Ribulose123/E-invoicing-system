@@ -38,11 +38,31 @@ namespace E_invocing.Persistence
                 entity.Property<DateTime>("createdAt");
             });
 
-            modelBuilder.Entity<InvoiceItem>(entity =>
+            modelBuilder.Entity<Invoice>(entity =>
             {
-                entity.Property<int>("quantity");
-                entity.Property<int>("unitPrice");
+                entity.Property<string?>("invoiceNumber");
+                entity.Property<string?>("baseCurrency");
+
+                entity.Property<decimal>("baseAmount")
+                      .HasPrecision(18, 4);
+
+                entity.Property<decimal>("taxAmount")
+                      .HasPrecision(18, 4);
+
+                entity.Property<decimal>("totalAmount")
+                      .HasPrecision(18, 4);
+
+                entity.Property<decimal>("exchangeRate")
+                      .HasPrecision(18, 8);
+
+                entity.Property<decimal>("convertedTotalAmount")
+                      .HasPrecision(18, 4);
+
+                entity.Property<string?>("settlementCurreny");
+
+                entity.Property<Status>("status");
             });
+
         }
 
         public DbSet<Invoice> Invoices { get; set; }

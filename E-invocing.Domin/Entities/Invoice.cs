@@ -56,17 +56,43 @@ namespace E_invocing.Domin.Entities
 
         public void ApplyTax(decimal taxRate)
         {
+            if(status != Status.Pending) 
+                throw new DomainExpectation("Only pending invoices can have tax applied.");
+
+            if (taxRate < 0 || taxRate > 1)
+                throw new DomainExpectation("Tax rate must be between 0 and 1.");
+
+            if(baseAmount <=0)
+                throw new DomainExpectation("Base amount must be greater than zero to apply tax.");
+
             taxAmount = taxRate * baseAmount;
             totalAmount = taxAmount + baseAmount;
         }
 
         public void ApplyFx(decimal rate, string targetCurrency)
         {
+            if(rate <= 0)
+                throw new DomainExpectation("Exchange rate must be greater than zero.");
+
+            if(string.IsNullOrWhiteSpace(targetCurrency))   
+                throw new DomainExpectation("Target currency must be provided.");
+
+            if(totalAmount <=0)
+                throw new DomainExpectation("Total amount must be greater than zero to apply FX.");
+
+
             settlementCurreny = targetCurrency;
             exchangeRate = rate;
             convertedTotalAmount = rate * totalAmount;
         }
 
+        public class DomainExpectation : Exception
+        {
+            public DomainExpectation( string Message) :base(Message)
+            {
+                
+            }
+        } 
         
     }
 }

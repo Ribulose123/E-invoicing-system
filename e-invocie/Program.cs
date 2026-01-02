@@ -10,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<TaxApiOptions>(
     builder.Configuration.GetSection("TaxApi"));
 
-builder.Services.AddScoped<ITaxService, TaxService>();
+builder.Services.AddHttpClient<ITaxService, TaxService>();
 
 
 // Dbconnection string
