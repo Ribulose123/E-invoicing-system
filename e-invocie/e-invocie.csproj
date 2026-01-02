@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>e_invocie</RootNamespace>
+    <UserSecretsId>808b87d4-a63f-407b-aa00-4bbcb61c482f</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

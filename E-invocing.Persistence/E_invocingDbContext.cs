@@ -27,7 +27,7 @@ namespace E_invocing.Persistence
             {
                 entity.Property<string?>("invoiceNumber");
                 entity.Property<string?>("baseCurrency");
-                entity.Property<string?>("baseAmount");
+                entity.Property<decimal>("baseAmount");
                 entity.Property<Status>("status");
             });
 

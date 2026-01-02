@@ -4,6 +4,7 @@ using E_invocing.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace E_invocing.Persistence.Migrations
 {
     [DbContext(typeof(E_invocingDbContext))]
-    partial class E_invocingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260102085244_UpdatedValidationName")]
+    partial class UpdatedValidationName
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -58,11 +61,11 @@ namespace E_invocing.Persistence.Migrations
                     b.Property<int>("UploadBatchId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("UplodedDate")
+                    b.Property<DateTime>("UplodadDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<decimal>("baseAmount")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<string>("baseAmount")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("baseCurrency")
                         .HasColumnType("nvarchar(max)");

@@ -11,10 +11,12 @@ namespace e_invocie.Services
     public class UploadBatchServices : IUploadbatch
     {
         private readonly E_invocingDbContext _context;
+        private  readonly ITaxService _taxService;
 
-        public UploadBatchServices(E_invocingDbContext context)
+        public UploadBatchServices(E_invocingDbContext context, ITaxService taxService)
         {
             _context = context;
+            _taxService = taxService;
         }
 
         public async Task<(string message, bool success)> UploadInvoiceAsync(UploadBatchRequestDto dto)
@@ -87,6 +89,10 @@ namespace e_invocie.Services
                         continue;
                     }
 
+                    // tax calculation
+                    decimal taxRate = await _taxService.GetTaxRateAsync(invoice.CustomerCountry);
+                    
+
                     // 6️⃣ Check if customer exists, otherwise create
                     var customer = await _context.Customers.FirstOrDefaultAsync(c => c.Email == customerEmail);
                     if (customer == null)
@@ -97,7 +103,15 @@ namespace e_invocie.Services
                     }
 
                     // 7️⃣ Save invoice
-                    var newInvoice = new Invoice(customer.Id, uploadBatch.Id);
+                    var newInvoice = new Invoice(
+                     customer.Id,
+                     uploadBatch.Id,
+                     invoice.InvoiceNumber,
+                     invoice.Currency,
+                     amount
+                     );
+
+                    newInvoice.ApplyTax(taxRate);
                     await _context.Invoices.AddAsync(newInvoice);
                     successfulRecords++;
                 }

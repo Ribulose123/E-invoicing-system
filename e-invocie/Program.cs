@@ -1,9 +1,16 @@
+using E_invocing.Domin.Entities;
+using E_invocing.Domin.InterFaces;
 using E_invocing.Persistence;
+using E_invoicing.Infrastructure.Logic.Tax___Fx;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.Configure<TaxApiOptions>(
+    builder.Configuration.GetSection("TaxApi"));
+
+builder.Services.AddScoped<ITaxService, TaxService>();
 
 
 // Dbconnection string
