@@ -12,6 +12,10 @@ builder.Services.Configure<TaxApiOptions>(
 
 builder.Services.AddHttpClient<ITaxService, TaxService>();
 
+builder.Services.Configure<FxApiOptions>(
+    builder.Configuration.GetSection("FxOptions"));
+builder.Services.AddHttpClient<IFxServices, FxServices>();
+
 
 // Dbconnection string
 builder.Services.AddDbContext<E_invocingDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));

@@ -12,11 +12,13 @@ namespace e_invocie.Services
     {
         private readonly E_invocingDbContext _context;
         private  readonly ITaxService _taxService;
+        private readonly IFxServices _fxService;
 
-        public UploadBatchServices(E_invocingDbContext context, ITaxService taxService)
+        public UploadBatchServices(E_invocingDbContext context, ITaxService taxService, IFxServices fxServices)
         {
             _context = context;
             _taxService = taxService;
+            _fxService = fxServices;
         }
 
         public async Task<(string message, bool success)> UploadInvoiceAsync(UploadBatchRequestDto dto)
@@ -34,6 +36,7 @@ namespace e_invocie.Services
             int failedRecords = 0;
 
             var uploadedInvoiceNumbers = new HashSet<string>();
+            string targetCurrency = "USD";
 
             // 2️⃣ Parse invoices (from file if needed)
             IExcelParser parser = new ExcelParser();
@@ -91,6 +94,10 @@ namespace e_invocie.Services
 
                     // tax calculation
                     decimal taxRate = await _taxService.GetTaxRateAsync(invoice.CustomerCountry);
+
+                    //Fx calcualtion 
+                    decimal fxRate = await _fxService.GetExchangeRateAsync(invoice.Currency, targetCurrency);
+
                     
 
                     // 6️⃣ Check if customer exists, otherwise create
@@ -101,7 +108,7 @@ namespace e_invocie.Services
                         await _context.Customers.AddAsync(customer);
                         await _context.SaveChangesAsync();
                     }
-
+                    
                     // 7️⃣ Save invoice
                     var newInvoice = new Invoice(
                      customer.Id,
@@ -112,6 +119,7 @@ namespace e_invocie.Services
                      );
 
                     newInvoice.ApplyTax(taxRate);
+                    newInvoice.ApplyFx(fxRate, targetCurrency);
                     await _context.Invoices.AddAsync(newInvoice);
                     successfulRecords++;
                 }
