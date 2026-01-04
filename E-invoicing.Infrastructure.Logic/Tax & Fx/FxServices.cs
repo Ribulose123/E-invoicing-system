@@ -18,25 +18,19 @@ namespace E_invoicing.Infrastructure.Logic.Tax___Fx
 
         public async Task<decimal> GetExchangeRateAsync(string fromCurrency, string toCurrency)
         {
-            if (string.IsNullOrEmpty(fromCurrency) || string.IsNullOrEmpty(toCurrency))
-                throw new ArgumentException("Both fromCurrency and toCurrency are required.");
+            var response = await _httpClient
+                .GetFromJsonAsync<FxApiResponse>($"{_baseUrl}/{fromCurrency.ToUpper()}");
 
-            fromCurrency = fromCurrency.ToUpper();
-            toCurrency = toCurrency.ToUpper();
-
-            // Call the API
-            var response = await _httpClient.GetFromJsonAsync<FxApiResponse>($"{_baseUrl}/{fromCurrency}");
-
-            if (response == null || !response.Rates.TryGetValue(toCurrency, out decimal rate))
-                throw new Exception($"Exchange rate from {fromCurrency} to {toCurrency} not found.");
+            if (response == null ||
+                !response.Rates.TryGetValue(toCurrency.ToUpper(), out decimal rate))
+                throw new Exception($"FX rate not found: {fromCurrency} → {toCurrency}");
 
             return rate;
         }
+    }
 
-        public class FxApiResponse
-        {
-            public string Base { get; set; } = string.Empty;
-            public Dictionary<string, decimal> Rates { get; set; } = new();
-        }
+    public class FxApiResponse
+    {
+        public Dictionary<string, decimal> Rates { get; set; } = new();
     }
 }

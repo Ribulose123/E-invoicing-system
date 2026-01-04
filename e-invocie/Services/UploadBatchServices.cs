@@ -11,10 +11,13 @@ namespace e_invocie.Services
     public class UploadBatchServices : IUploadbatch
     {
         private readonly E_invocingDbContext _context;
-        private  readonly ITaxService _taxService;
+        private readonly ITaxService _taxService;
         private readonly IFxServices _fxService;
 
-        public UploadBatchServices(E_invocingDbContext context, ITaxService taxService, IFxServices fxServices)
+        public UploadBatchServices(
+            E_invocingDbContext context,
+            ITaxService taxService,
+            IFxServices fxServices)
         {
             _context = context;
             _taxService = taxService;
@@ -36,37 +39,45 @@ namespace e_invocie.Services
             int failedRecords = 0;
 
             var uploadedInvoiceNumbers = new HashSet<string>();
-            string targetCurrency = "USD";
 
-            // 2️⃣ Parse invoices (from file if needed)
+            string settlementCurrency = "USD";
+
+            // 2️⃣ Parse invoices
             IExcelParser parser = new ExcelParser();
-            var invoices = parser.ParseInvoice(File.OpenRead("invoices.xlsx")); // Replace with dto.In
+            var invoices = parser.ParseInvoice(File.OpenRead("invoices.xlsx"));
 
             foreach (var invoice in invoices)
             {
                 try
                 {
-                    // Trim fields
+                    // Normalize inputs
                     var invoiceNumber = invoice.InvoiceNumber?.Trim();
                     var customerEmail = invoice.CustomerEmail?.Trim();
-                    var amountText = invoice.Amount.ToString();
+                    var baseCurrency = invoice.Currency?.Trim();
+                    var amountText = invoice.Amount;
 
                     // 3️⃣ Structural validation
-                    if (string.IsNullOrEmpty(invoiceNumber) ||
-                        string.IsNullOrEmpty(customerEmail) ||
-                        !decimal.TryParse(amountText, out decimal amount))
+                    if (string.IsNullOrWhiteSpace(invoiceNumber) ||
+                        string.IsNullOrWhiteSpace(customerEmail) ||
+                        string.IsNullOrWhiteSpace(baseCurrency) ||
+                        !decimal.TryParse(amountText, out decimal baseAmount) ||
+                        baseAmount <= 0)
                     {
                         await _context.ValidationErrors.AddAsync(new ValidationError(
                             uploadBatch.Id,
-                            "InvoiceNumber/CustomerEmail/Amount",
+                            "Invoice",
                             "Required fields missing or invalid."
                         ));
                         failedRecords++;
                         continue;
                     }
 
-                    // 4️⃣ Check duplicates in current upload
-                    if (!uploadedInvoiceNumbers.Add(invoiceNumber))
+                    // Make compiler-safe
+                    string safeInvoiceNumber = invoiceNumber!;
+                    string safeBaseCurrency = baseCurrency!;
+
+                    // 4️⃣ Check duplicates in upload
+                    if (!uploadedInvoiceNumbers.Add(safeInvoiceNumber))
                     {
                         await _context.ValidationErrors.AddAsync(new ValidationError(
                             uploadBatch.Id,
@@ -79,7 +90,7 @@ namespace e_invocie.Services
 
                     // 5️⃣ Check duplicates in database
                     bool existsInDb = await _context.Invoices
-                        .AnyAsync(i => i.InvoiceNumber == invoiceNumber);
+                        .AnyAsync(i => i.InvoiceNumber == safeInvoiceNumber);
 
                     if (existsInDb)
                     {
@@ -92,62 +103,80 @@ namespace e_invocie.Services
                         continue;
                     }
 
-                    // tax calculation
-                    decimal taxRate = await _taxService.GetTaxRateAsync(invoice.CustomerCountry);
+                    // 6️⃣ Tax calculation
+                    decimal taxRate = await _taxService
+                        .GetTaxRateAsync(invoice.CustomerCountry);
 
-                    //Fx calcualtion 
-                    decimal fxRate = await _fxService.GetExchangeRateAsync(invoice.Currency, targetCurrency);
+                    // 7️⃣ FX calculation
+                    decimal fxRate = safeBaseCurrency == settlementCurrency
+                        ? 1m
+                        : await _fxService.GetExchangeRateAsync(
+                            safeBaseCurrency,
+                            settlementCurrency
+                        );
 
-                    
+                    // 8️⃣ Customer lookup / creation
+                    var customer = await _context.Customers
+                        .FirstOrDefaultAsync(c => c.Email == customerEmail);
 
-                    // 6️⃣ Check if customer exists, otherwise create
-                    var customer = await _context.Customers.FirstOrDefaultAsync(c => c.Email == customerEmail);
                     if (customer == null)
                     {
-                        customer = new Customer(customerEmail, customerEmail, invoice.CustomerCountry);
+                        customer = new Customer(
+                            customerEmail!,
+                            customerEmail!,
+                            invoice.CustomerCountry
+                        );
+
                         await _context.Customers.AddAsync(customer);
                         await _context.SaveChangesAsync();
                     }
-                    
-                    // 7️⃣ Save invoice
+
+                    // 9️⃣ Create invoice
                     var newInvoice = new Invoice(
-                     customer.Id,
-                     uploadBatch.Id,
-                     invoice.InvoiceNumber,
-                     invoice.Currency,
-                     amount
-                     );
+                        customer.Id,
+                        uploadBatch.Id,
+                        safeInvoiceNumber,
+                        safeBaseCurrency,
+                        baseAmount
+                    );
 
                     newInvoice.ApplyTax(taxRate);
-                    newInvoice.ApplyFx(fxRate, targetCurrency);
+                    newInvoice.ApplyFx(fxRate, settlementCurrency);
+
                     await _context.Invoices.AddAsync(newInvoice);
+
                     successfulRecords++;
                 }
                 catch (Exception ex)
                 {
-                    // Catch any unexpected error for this invoice
                     await _context.ValidationErrors.AddAsync(new ValidationError(
                         uploadBatch.Id,
                         "InvoiceProcessing",
                         $"Error processing invoice {invoice.InvoiceNumber}: {ex.Message}"
                     ));
+
                     failedRecords++;
-                    continue;
                 }
             }
 
-            // 8️⃣ Update upload batch stats
+            // 🔟 Update upload batch summary
             uploadBatch.SetTotalRecords(totalRecords);
-            for (int i = 0; i < successfulRecords; i++) uploadBatch.RecordSuccess();
-            for (int i = 0; i < failedRecords; i++) uploadBatch.RecordFailure();
-            if (successfulRecords > 0) uploadBatch.MarkAsCompleted();
+
+            for (int i = 0; i < successfulRecords; i++)
+                uploadBatch.RecordSuccess();
+
+            for (int i = 0; i < failedRecords; i++)
+                uploadBatch.RecordFailure();
+
+            if (successfulRecords > 0)
+                uploadBatch.MarkAsCompleted();
 
             await _context.SaveChangesAsync();
 
-            string message = $"Upload completed. Total: {totalRecords}, Success: {successfulRecords}, Failed: {failedRecords}";
-            bool success = successfulRecords > 0;
+            string message =
+                $"Upload completed. Total: {totalRecords}, Success: {successfulRecords}, Failed: {failedRecords}";
 
-            return (message, success);
+            return (message, successfulRecords > 0);
         }
     }
 }
