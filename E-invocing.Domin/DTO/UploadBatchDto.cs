@@ -1,8 +1,8 @@
 ﻿namespace E_invocing.Domin.DTO
 {
-    public class UploadBatchRequestDto
+    public class UploadRequestDto
     {
         public string UploadBy { get; set; } = string.Empty;
-        public List<InvoiceUploadDto> Invoices { get; set; } = new();
+        public Stream FileStream { get; set; } = Stream.Null;
     }
 }

@@ -24,9 +24,9 @@ namespace e_invocie.Services
             _fxService = fxServices;
         }
 
-        public async Task<(string message, bool success)> UploadInvoiceAsync(UploadBatchRequestDto dto)
+        public async Task<(string message, bool success)> UploadInvoiceAsync(UploadRequestDto dto)
         {
-            if (dto.Invoices == null || !dto.Invoices.Any())
+            if (dto.FileStream == null)
                 return ("No invoices uploaded", false);
 
             // 1️⃣ Create upload batch
@@ -34,7 +34,11 @@ namespace e_invocie.Services
             await _context.UploadBatches.AddAsync(uploadBatch);
             await _context.SaveChangesAsync();
 
-            int totalRecords = dto.Invoices.Count;
+            // 2️⃣ Parse invoices
+            IExcelParser parser = new ExcelParser();
+            var invoices = parser.ParseInvoice(dto.FileStream);
+
+            int totalRecords = invoices.Count;
             int successfulRecords = 0;
             int failedRecords = 0;
 
@@ -42,9 +46,7 @@ namespace e_invocie.Services
 
             string settlementCurrency = "USD";
 
-            // 2️⃣ Parse invoices
-            IExcelParser parser = new ExcelParser();
-            var invoices = parser.ParseInvoice(File.OpenRead("invoices.xlsx"));
+            
 
             foreach (var invoice in invoices)
             {

@@ -1,3 +1,5 @@
+using e_invocie.IServices;
+using e_invocie.Services;
 using E_invocing.Domin.Entities;
 using E_invocing.Domin.InterFaces;
 using E_invocing.Persistence;
@@ -11,6 +13,7 @@ builder.Services.Configure<TaxApiOptions>(
     builder.Configuration.GetSection("TaxApi"));
 
 builder.Services.AddHttpClient<ITaxService, TaxService>();
+builder.Services.AddScoped<IUploadbatch, UploadBatchServices>();
 
 builder.Services.Configure<FxApiOptions>(
     builder.Configuration.GetSection("FxOptions"));

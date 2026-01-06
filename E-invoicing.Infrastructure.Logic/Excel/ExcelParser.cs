@@ -1,4 +1,5 @@
 ﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Spreadsheet;
 using E_invocing.Domin.DTO;
 using E_invocing.Domin.InterFaces;
 
@@ -10,53 +11,45 @@ namespace E_invoicing.Infrastructure.Logic.Excel
         {
             var invoices = new List<InvoiceUploadDto>();
 
-            using var workbook = new XLWorkbook(fileStream);
-            var worksheet = workbook.Worksheet(1);
-
-            var headerRow = worksheet.Row(1);
-            var headers = headerRow.CellsUsed().Select(c => c.GetString().Trim()).ToList();
-
-            var dataRows = worksheet.RowsUsed().Skip(1);
-
-            foreach (var row in dataRows)
+            if(fileStream.CanSeek && fileStream.Position > 0)
             {
-                var rowDict = new Dictionary<string, string>();
-                for (int i = 0; i < headers.Count; i++)
-                {
-                    rowDict[headers[i]] = row.Cell(i + 1).GetString().Trim();
-                }
-
-                var invoice = new InvoiceUploadDto();
-
-                foreach (var kvp in rowDict)
-                {
-                    switch (kvp.Key)
-                    {
-                        case "InvoiceNumber":
-                            invoice.InvoiceNumber = kvp.Value;
-                            break;
-                        case "Currency":
-                            invoice.Currency = kvp.Value;
-                            break;
-                        case "Amount":
-                            invoice.Amount = kvp.Value;
-                            break;
-                        case "CustomerEmail":
-                            invoice.CustomerEmail = kvp.Value;
-                            break;
-                        case "CustomerCountry":
-                            invoice.CustomerCountry = kvp.Value;
-                            break;
-                        default:
-                            invoice.OtherFields[kvp.Key] = kvp.Value;
-                            break;
-                    }
-                }
-
-                invoices.Add(invoice);
+                fileStream.Position = 0;
             }
 
-            return invoices;
+            using (var workBook = new XLWorkbook(fileStream))
+            {
+                var workSheet = workBook.Worksheet(1);
+                var headerRow = workSheet.Row(1);
+                var headers = headerRow.CellsUsed().Select(c => c.GetString().Trim()).ToList();
+
+                var dataRows = workSheet.RowsUsed().Skip(1);
+
+                foreach (var row in dataRows)
+                {
+                    var invoice = new InvoiceUploadDto();
+
+                    for(var i = 0; i < headers.Count; i++)
+                    {
+                        var header = headers[i];
+                        var value = row.Cell(1).GetString().Trim();
+
+                        switch (header)
+                        {
+                            case "InvoiceNumber": invoice.InvoiceNumber = value; break;
+                            case "Currency": invoice.Currency = value; break;
+                            case "Amount": invoice.Amount = value; break;
+                            case "CustomerEmail": invoice.CustomerEmail = value; break;
+                            case "CustomerCountry": invoice.CustomerCountry = value; break;
+                            default:
+                                invoice.OtherFields[header] = value;
+                                break;
+                        }
+                    }
+                    invoices.Add(invoice);
+                }
+
+                return invoices;
+            }
         }
     }
 }
