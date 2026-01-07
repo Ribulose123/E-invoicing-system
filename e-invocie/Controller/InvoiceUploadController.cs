@@ -1,4 +1,5 @@
 ﻿using e_invocie.IServices;
+using e_invocie.DTOs;
 using E_invocing.Domin.DTO;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,36 +16,26 @@ namespace e_invocie.Controller
             _uploadbatch = uploadbatch;
         }
 
-
         [HttpPost("upload-invoices")]
-        [Consumes("multipart/form-data")] 
-        public async Task<IActionResult> UploadInvoices([FromForm] IFormFile file, [FromForm] string uploadBy)
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> UploadInvoices([FromForm] UploadInvoiceFormDto form)
         {
-            
-            if (file == null || file.Length == 0)
+            if (form.File == null || form.File.Length == 0)
                 return BadRequest("File is empty.");
 
-            if (string.IsNullOrEmpty(uploadBy))
-                return BadRequest("Uploader name (uploadBy) is required.");
+            using var stream = form.File.OpenReadStream();
 
-            using (var stream = file.OpenReadStream())
+            var request = new UploadRequestDto
             {
-          
-                var dto = new UploadRequestDto
-                {
-                    UploadBy = uploadBy,
-                    FileStream = stream
-                };
+                UploadBy = form.UploadBy,
+                FileStream = stream
+            };
 
+            var (message, success) = await _uploadbatch.UploadInvoiceAsync(request);
 
-                var (message, success) = await _uploadbatch.UploadInvoiceAsync(dto);
-
-                return success
-                    ? Ok(new { success = true, message })
-                    : BadRequest(new { success = false, message });
-            }
+            return success
+                ? Ok(new { success = true, message })
+                : BadRequest(new { success = false, message });
         }
-
-
     }
 }
