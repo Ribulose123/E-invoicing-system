@@ -18,24 +18,38 @@ namespace e_invocie.Controller
 
         [HttpPost("upload-invoices")]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> UploadInvoices([FromForm] UploadInvoiceFormDto form)
+        public async Task<IActionResult> UploadInvoices([FromForm] UploadInvoiceFormDto dto)
         {
-            if (form.File == null || form.File.Length == 0)
-                return BadRequest("File is empty.");
-
-            using var stream = form.File.OpenReadStream();
+            using var stream = dto.File.OpenReadStream();
 
             var request = new UploadRequestDto
             {
-                UploadBy = form.UploadBy,
+                UploadBy = dto.UploadBy,
                 FileStream = stream
             };
 
-            var (message, success) = await _uploadbatch.UploadInvoiceAsync(request);
+            var (message, success, errors) = await _uploadbatch.UploadInvoiceAsync(request);
 
-            return success
-                ? Ok(new { success = true, message })
-                : BadRequest(new { success = false, message });
+            if (!success)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message,
+                    errors = errors.Select(e => new
+                    {
+                        field = e.FieldName,
+                        message = e.ErrorMessage
+                    })
+                });
+            }
+
+            return Ok(new
+            {
+                success = true,
+                message
+            });
         }
+
     }
 }

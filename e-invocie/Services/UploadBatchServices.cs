@@ -13,132 +13,117 @@ namespace e_invocie.Services
         private readonly E_invocingDbContext _context;
         private readonly ITaxService _taxService;
         private readonly IFxServices _fxService;
+        private readonly ILogger<UploadBatchServices> _logger;
 
         public UploadBatchServices(
             E_invocingDbContext context,
             ITaxService taxService,
-            IFxServices fxServices)
+            IFxServices fxServices,
+            ILogger<UploadBatchServices> logger)
         {
             _context = context;
             _taxService = taxService;
             _fxService = fxServices;
+            _logger = logger;
         }
 
-        public async Task<(string message, bool success)> UploadInvoiceAsync(UploadRequestDto dto)
+        public async Task<(string message, bool success, List<ValidationError> errors)>
+    UploadInvoiceAsync(UploadRequestDto dto)
         {
-            if (dto.FileStream == null)
-                return ("No invoices uploaded", false);
+            var errors = new List<ValidationError>();
 
-            // 1️⃣ Create upload batch
+            if (dto.FileStream == null)
+                return ("No file uploaded", false, errors);
+
             var uploadBatch = new UploadBatch(dto.UploadBy);
             await _context.UploadBatches.AddAsync(uploadBatch);
             await _context.SaveChangesAsync();
 
-            // 2️⃣ Parse invoices
             IExcelParser parser = new ExcelParser();
             var invoices = parser.ParseInvoice(dto.FileStream);
 
-            int totalRecords = invoices.Count;
-            int successfulRecords = 0;
-            int failedRecords = 0;
+            int total = invoices.Count;
+            int success = 0;
+            int failed = 0;
 
-            var uploadedInvoiceNumbers = new HashSet<string>();
-
+            var batchDuplicates = new HashSet<string>();
             string settlementCurrency = "USD";
-
-            
 
             foreach (var invoice in invoices)
             {
                 try
                 {
-                    // Normalize inputs
-                    var invoiceNumber = invoice.InvoiceNumber?.Trim();
-                    var customerEmail = invoice.CustomerEmail?.Trim();
-                    var baseCurrency = invoice.Currency?.Trim();
-                    var amountText = invoice.Amount;
+                    string? invoiceNumber = invoice.InvoiceNumber?.Trim();
+                    string? email = invoice.CustomerEmail?.Trim();
+                    string? currency = invoice.Currency?.Trim();
+                    string? amountText = invoice.Amount;
 
-                    // 3️⃣ Structural validation
-                    if (string.IsNullOrWhiteSpace(invoiceNumber) ||
-                        string.IsNullOrWhiteSpace(customerEmail) ||
-                        string.IsNullOrWhiteSpace(baseCurrency) ||
-                        !decimal.TryParse(amountText, out decimal baseAmount) ||
-                        baseAmount <= 0)
+                    if (string.IsNullOrWhiteSpace(invoiceNumber))
                     {
-                        await _context.ValidationErrors.AddAsync(new ValidationError(
-                            uploadBatch.Id,
-                            "Invoice",
-                            "Required fields missing or invalid."
-                        ));
-                        failedRecords++;
-                        continue;
+                        errors.Add(new ValidationError(uploadBatch.Id, "InvoiceNumber", "Invoice number is required"));
+                        failed++; continue;
                     }
 
-                    // Make compiler-safe
-                    string safeInvoiceNumber = invoiceNumber!;
-                    string safeBaseCurrency = baseCurrency!;
-
-                    // 4️⃣ Check duplicates in upload
-                    if (!uploadedInvoiceNumbers.Add(safeInvoiceNumber))
+                    if (string.IsNullOrWhiteSpace(email))
                     {
-                        await _context.ValidationErrors.AddAsync(new ValidationError(
-                            uploadBatch.Id,
-                            "InvoiceNumber",
-                            "Duplicate invoice number in this upload batch."
-                        ));
-                        failedRecords++;
-                        continue;
+                        errors.Add(new ValidationError(uploadBatch.Id, "CustomerEmail", "Customer email is required"));
+                        failed++; continue;
                     }
 
-                    // 5️⃣ Check duplicates in database
-                    bool existsInDb = await _context.Invoices
-                        .AnyAsync(i => i.InvoiceNumber == safeInvoiceNumber);
-
-                    if (existsInDb)
+                    if (string.IsNullOrWhiteSpace(currency))
                     {
-                        await _context.ValidationErrors.AddAsync(new ValidationError(
-                            uploadBatch.Id,
-                            "InvoiceNumber",
-                            "Invoice number already exists in the system."
-                        ));
-                        failedRecords++;
-                        continue;
+                        errors.Add(new ValidationError(uploadBatch.Id, "Currency", "Currency is required"));
+                        failed++; continue;
                     }
 
-                    // 6️⃣ Tax calculation
-                    decimal taxRate = await _taxService
-                        .GetTaxRateAsync(invoice.CustomerCountry);
+                    if (!decimal.TryParse(amountText, out decimal baseAmount))
+                    {
+                        errors.Add(new ValidationError(uploadBatch.Id, "Amount", "Amount must be numeric"));
+                        failed++; continue;
+                    }
 
-                    // 7️⃣ FX calculation
-                    decimal fxRate = safeBaseCurrency == settlementCurrency
+                    if (baseAmount <= 0)
+                    {
+                        errors.Add(new ValidationError(uploadBatch.Id, "Amount", "Amount must be greater than zero"));
+                        failed++; continue;
+                    }
+
+                    if (!batchDuplicates.Add(invoiceNumber))
+                    {
+                        errors.Add(new ValidationError(uploadBatch.Id, "InvoiceNumber", "Duplicate invoice in upload file"));
+                        failed++; continue;
+                    }
+
+                    bool exists = await _context.Invoices
+                        .AnyAsync(i => i.InvoiceNumber == invoiceNumber);
+
+                    if (exists)
+                    {
+                        errors.Add(new ValidationError(uploadBatch.Id, "InvoiceNumber", "Invoice already exists in system"));
+                        failed++; continue;
+                    }
+
+                    decimal taxRate = await _taxService.GetTaxRateAsync(invoice.CustomerCountry);
+
+                    decimal fxRate = currency == settlementCurrency
                         ? 1m
-                        : await _fxService.GetExchangeRateAsync(
-                            safeBaseCurrency,
-                            settlementCurrency
-                        );
+                        : await _fxService.GetExchangeRateAsync(currency, settlementCurrency);
 
-                    // 8️⃣ Customer lookup / creation
                     var customer = await _context.Customers
-                        .FirstOrDefaultAsync(c => c.Email == customerEmail);
+                        .FirstOrDefaultAsync(c => c.Email == email);
 
                     if (customer == null)
                     {
-                        customer = new Customer(
-                            customerEmail!,
-                            customerEmail!,
-                            invoice.CustomerCountry
-                        );
-
+                        customer = new Customer(email, email, invoice.CustomerCountry);
                         await _context.Customers.AddAsync(customer);
                         await _context.SaveChangesAsync();
                     }
 
-                    // 9️⃣ Create invoice
                     var newInvoice = new Invoice(
                         customer.Id,
                         uploadBatch.Id,
-                        safeInvoiceNumber,
-                        safeBaseCurrency,
+                        invoiceNumber,
+                        currency,
                         baseAmount
                     );
 
@@ -147,38 +132,30 @@ namespace e_invocie.Services
 
                     await _context.Invoices.AddAsync(newInvoice);
 
-                    successfulRecords++;
+                    success++;
                 }
                 catch (Exception ex)
                 {
-                    await _context.ValidationErrors.AddAsync(new ValidationError(
-                        uploadBatch.Id,
-                        "InvoiceProcessing",
-                        $"Error processing invoice {invoice.InvoiceNumber}: {ex.Message}"
-                    ));
-
-                    failedRecords++;
+                    errors.Add(new ValidationError(uploadBatch.Id, "System", ex.Message));
+                    failed++;
+                    _logger.LogError(ex, "Invoice failed");
                 }
             }
 
-            // 🔟 Update upload batch summary
-            uploadBatch.SetTotalRecords(totalRecords);
+            uploadBatch.SetTotalRecords(total);
+            for (int i = 0; i < success; i++) uploadBatch.RecordSuccess();
+            for (int i = 0; i < failed; i++) uploadBatch.RecordFailure();
 
-            for (int i = 0; i < successfulRecords; i++)
-                uploadBatch.RecordSuccess();
+            if (success > 0) uploadBatch.MarkAsCompleted();
 
-            for (int i = 0; i < failedRecords; i++)
-                uploadBatch.RecordFailure();
-
-            if (successfulRecords > 0)
-                uploadBatch.MarkAsCompleted();
-
+            await _context.ValidationErrors.AddRangeAsync(errors);
             await _context.SaveChangesAsync();
 
             string message =
-                $"Upload completed. Total: {totalRecords}, Success: {successfulRecords}, Failed: {failedRecords}";
+                $"Upload completed. Total: {total}, Success: {success}, Failed: {failed}";
 
-            return (message, successfulRecords > 0);
+            return (message, success > 0, errors);
         }
+
     }
 }

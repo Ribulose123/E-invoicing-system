@@ -5,6 +5,8 @@ namespace e_invocie.IServices
 {
     public interface IUploadbatch
     {
-        Task<(string message, bool success)> UploadInvoiceAsync(UploadRequestDto dto);
+        Task<(string message, bool success, List<ValidationError> errors)>
+            UploadInvoiceAsync(UploadRequestDto dto);
     }
+
 }

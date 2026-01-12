@@ -15,6 +15,7 @@ builder.Services.Configure<TaxApiOptions>(
 builder.Services.AddHttpClient<ITaxService, TaxService>();
 builder.Services.AddScoped<IUploadbatch, UploadBatchServices>();
 
+
 builder.Services.Configure<FxApiOptions>(
     builder.Configuration.GetSection("FxOptions"));
 builder.Services.AddHttpClient<IFxServices, FxServices>();
