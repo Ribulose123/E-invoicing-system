@@ -4,6 +4,7 @@ using E_invocing.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace E_invocing.Persistence.Migrations
 {
     [DbContext(typeof(E_invocingDbContext))]
-    partial class E_invocingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260112141824_AddInvoiceStatus")]
+    partial class AddInvoiceStatus
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -41,7 +44,7 @@ namespace E_invocing.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Customers", (string)null);
+                    b.ToTable("Customers");
                 });
 
             modelBuilder.Entity("E_invocing.Domin.Entities.InvoiceItem", b =>
@@ -60,7 +63,7 @@ namespace E_invocing.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("InvoicesItems", (string)null);
+                    b.ToTable("InvoicesItems");
                 });
 
             modelBuilder.Entity("E_invocing.Domin.Entities.UploadBatch", b =>
@@ -91,7 +94,7 @@ namespace E_invocing.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("UploadBatches", (string)null);
+                    b.ToTable("UploadBatches");
                 });
 
             modelBuilder.Entity("Invoice", b =>
@@ -172,7 +175,7 @@ namespace E_invocing.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Invoices", (string)null);
+                    b.ToTable("Invoices");
                 });
 
             modelBuilder.Entity("ValidationError", b =>
@@ -197,7 +200,7 @@ namespace E_invocing.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ValidationErrors", (string)null);
+                    b.ToTable("ValidationErrors");
                 });
 #pragma warning restore 612, 618
         }

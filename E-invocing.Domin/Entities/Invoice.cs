@@ -1,5 +1,4 @@
 ﻿using E_invocing.Domin.Enum;
-using System;
 
 namespace E_invocing.Domin.Entities
 {
@@ -7,33 +6,24 @@ namespace E_invocing.Domin.Entities
     {
         public int Id { get; private set; }
 
-        private string invoiceNumber = null!;
-        private string baseCurrency = null!;
-        private string settlementCurrency = null!;
-
-        private decimal baseAmount;
-        private decimal taxAmount;
-        private decimal totalAmount;
-        private decimal exchangeRate;
-        private decimal convertedTotalAmount;
-
-        private Status status = Status.Pending;
-
         public int CustomerId { get; private set; }
         public int UploadBatchId { get; private set; }
-        public DateTime UploadedDate { get; private set; } = DateTime.UtcNow;
 
-        public string InvoiceNumber => invoiceNumber;
-        public string BaseCurrency => baseCurrency;
-        public string SettlementCurrency => settlementCurrency;
-        public decimal BaseAmount => baseAmount;
-        public decimal TaxAmount => taxAmount;
-        public decimal TotalAmount => totalAmount;
-        public decimal ExchangeRate => exchangeRate;
-        public decimal ConvertedTotalAmount => convertedTotalAmount;
-        public Status Status => status;
+        public string InvoiceNumber { get; private set; } = string.Empty;
+        public string BaseCurrency { get; private set; } = string.Empty;
 
-        protected Invoice() { } // EF Core
+        public decimal BaseAmount { get; private set; }
+        public decimal TaxAmount { get; private set; }
+        public decimal FxRate { get; private set; }
+
+        public string SettlementCurrency { get; private set; } = "USD";
+        public decimal SettlementAmount { get; private set; }
+
+        public InvoiceStatus Status { get; private set; }
+
+        public DateTime CreatedAt { get; private set; }
+
+        protected Invoice() { }
 
         public Invoice(
             int customerId,
@@ -44,47 +34,56 @@ namespace E_invocing.Domin.Entities
         {
             CustomerId = customerId;
             UploadBatchId = uploadBatchId;
+            InvoiceNumber = invoiceNumber;
+            BaseCurrency = baseCurrency;
+            BaseAmount = baseAmount;
 
-            this.invoiceNumber = invoiceNumber ?? throw new DomainException("Invoice number is required.");
-            this.baseCurrency = baseCurrency ?? throw new DomainException("Base currency is required.");
-
-            if (baseAmount <= 0)
-                throw new DomainException("Base amount must be greater than zero.");
-
-            this.baseAmount = baseAmount;
+            Status = InvoiceStatus.Draft;
         }
 
         public void ApplyTax(decimal taxRate)
         {
-            if (taxRate < 0 || taxRate > 1)
-                throw new DomainException("Tax rate must be between 0 and 1.");
-
-            taxAmount = baseAmount * taxRate;
-            totalAmount = baseAmount + taxAmount;
+            TaxAmount = BaseAmount * taxRate;
+            Status = InvoiceStatus.Validated;
         }
 
-        public void ApplyFx(decimal rate, string targetCurrency)
+        public void ApplyFx(decimal fxRate, string settlementCurrency)
         {
-            if (rate <= 0)
-                throw new DomainException("FX rate must be greater than zero.");
-
-            if (string.IsNullOrWhiteSpace(targetCurrency))
-                throw new DomainException("Target currency is required.");
-
-            if (totalAmount <= 0)
-                throw new DomainException("Apply tax before FX.");
-
-            settlementCurrency = targetCurrency;
-            exchangeRate = rate;
-            convertedTotalAmount = totalAmount * rate;
+            FxRate = fxRate;
+            SettlementCurrency = settlementCurrency;
+            SettlementAmount = (BaseAmount + TaxAmount) * fxRate;
         }
 
-        public void MarkAsProcessed() => status = Status.Success;
-        public void MarkAsFailed() => status = Status.Failed;
-
-        public class DomainException : Exception
+        public void Approve()
         {
-            public DomainException(string message) : base(message) { }
+            if (Status != InvoiceStatus.Validated)
+                throw new InvalidOperationException("Only validated invoices can be approved.");
+
+            Status = InvoiceStatus.Approved;
+        }
+
+        public void Reject()
+        {
+            if (Status != InvoiceStatus.Validated)
+                throw new InvalidOperationException("Only validated invoices can be rejected.");
+
+            Status = InvoiceStatus.Rejected;
+        }
+
+        public void MarkSent()
+        {
+            if (Status != InvoiceStatus.Approved)
+                throw new InvalidOperationException("Only approved invoices can be sent.");
+
+            Status = InvoiceStatus.Sent;
+        }
+
+        public void MarkPaid()
+        {
+            if (Status != InvoiceStatus.Sent)
+                throw new InvalidOperationException("Only sent invoices can be marked as paid.");
+
+            Status = InvoiceStatus.Paid;
         }
     }
 }

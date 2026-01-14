@@ -1,39 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>e_invocie</RootNamespace>
-    <UserSecretsId>808b87d4-a63f-407b-aa00-4bbcb61c482f</UserSecretsId>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<RootNamespace>e_invocie</RootNamespace>
+		<UserSecretsId>808b87d4-a63f-407b-aa00-4bbcb61c482f</UserSecretsId>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="Controllers\**" />
-    <Content Remove="Controllers\**" />
-    <EmbeddedResource Remove="Controllers\**" />
-    <None Remove="Controllers\**" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.22" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.22" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.22">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.22">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\E-invocing.Domin\E-invocing.Domin.csproj" />
-    <ProjectReference Include="..\E-invocing.Persistence\E-invocing.Persistence.csproj" />
-	  <ProjectReference Include="..\E-invoicing.Infrastructure.Logic\E-invoicing.Infrastructure.Logic.csproj" />
-
-
-
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\E-invocing.Domin\E-invocing.Domin.csproj" />
+		<ProjectReference Include="..\E-invocing.Persistence\E-invocing.Persistence.csproj" />
+		<ProjectReference Include="..\E-invoicing.Infrastructure.Logic\E-invoicing.Infrastructure.Logic.csproj" />
+	</ItemGroup>
 
 </Project>

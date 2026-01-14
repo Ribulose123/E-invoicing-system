@@ -42,6 +42,21 @@ namespace e_invocie.Services
             IExcelParser parser = new ExcelParser();
             var invoices = parser.ParseInvoice(dto.FileStream);
 
+            _logger.LogInformation("Parsed {Count} invoices from Excel", invoices.Count);
+
+            int rowIndex = 1;
+            foreach (var inv in invoices)
+            {
+                _logger.LogInformation(
+                    "Row {Row}: InvoiceNumber='{Invoice}', Email='{Email}', Currency='{Currency}', Amount='{Amount}'",
+                    rowIndex++,
+                    inv.InvoiceNumber,
+                    inv.CustomerEmail,
+                    inv.Currency,
+                    inv.Amount
+                );
+            }
+
             int total = invoices.Count;
             int success = 0;
             int failed = 0;
